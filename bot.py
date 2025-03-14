@@ -8,7 +8,7 @@ CHANNEL_USERNAME = "@CrazyMines777"  # Канал для подписки
 PROMOCODE = "CrazyMines"  # Промокод
 DEPOSIT_LINK = "https://1wcneg.com/casino/list?open=register&sub1=832597017&p=gtyb"  # Ссылка для депозита
 SUPPORT_USERNAME = "@B1ake7"  # Ваш Telegram-ник для поддержки
-MENU_IMAGE_PATH = "menu.jpg"  # Путь к изображению меню
+MENU_IMAGE_PATH = "photo/menu.jpg"  # Путь к изображению меню
 
 bot = telebot.TeleBot(TOKEN)
 
