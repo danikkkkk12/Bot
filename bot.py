@@ -192,21 +192,28 @@ def choose_language(call):
 
     # Первый блок (5 языков)
     keyboard.add(
-        InlineKeyboardButton("🇷🇺 Русский", callback_data="lang_ru"),
-        InlineKeyboardButton("🇬🇧 English", callback_data="lang_en"),
-        InlineKeyboardButton("🇮🇩 Indonesia", callback_data="lang_id"),
-        InlineKeyboardButton("🇧🇷 Brazilian", callback_data="lang_br"),
-        InlineKeyboardButton("🇪🇸 Español", callback_data="lang_es")
+        InlineKeyboardButton("🇷🇺Русский", callback_data="lang_ru"),
+        InlineKeyboardButton("🇬🇧English", callback_data="lang_en"),
+        InlineKeyboardButton("🇮🇩Indonesia", callback_data="lang_id"),
+        InlineKeyboardButton("🇧🇷Brazilian", callback_data="lang_br"),
+        InlineKeyboardButton("🇪🇸Español", callback_data="lang_es")
     )
 
     # Второй блок (5 языков)
     keyboard.add(
-        InlineKeyboardButton("🇺🇿 O'zbek", callback_data="lang_oz"),
-        InlineKeyboardButton("🇦🇿 Azarbaycan", callback_data="lang_az"),
-        InlineKeyboardButton("🇹🇷 Türkçe", callback_data="lang_tu"),
-        InlineKeyboardButton("🇸🇦 العربية", callback_data="lang_ar"),
-        InlineKeyboardButton("🇵🇹 Português", callback_data="lang_po")
+        InlineKeyboardButton("🇺🇿O'zbek", callback_data="lang_oz"),
+        InlineKeyboardButton("🇦🇿Azarbaycan", callback_data="lang_az"),
+        InlineKeyboardButton("🇹🇷Türkçe", callback_data="lang_tu"),
+        InlineKeyboardButton("🇸🇦العربية", callback_data="lang_ar"),
+        InlineKeyboardButton("🇵🇹Português", callback_data="lang_po")
     )
+    with open(image_path, "rb") as photo:
+        bot.edit_message_media(
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,  # ID текущего сообщения
+            media=telebot.types.InputMediaPhoto(photo, caption="🌐 Выберите язык:"),
+            reply_markup=keyboard
+        )
 # Обработчик для кнопки "Получить сигнал"
 @bot.callback_query_handler(func=lambda call: call.data == "get_signal")
 def get_signal(call):
