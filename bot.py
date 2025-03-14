@@ -208,7 +208,7 @@ def choose_language(call):
         call.message.chat.id,
         "🌐 Выберите язык:",
         reply_markup=keyboard
-    
+    )
 
 # Обработчик для кнопки "Получить сигнал"
 @bot.callback_query_handler(func=lambda call: call.data == "get_signal")
