@@ -160,7 +160,7 @@ def start(message):
     user_name = message.from_user.first_name
     if not check_subscription(message.from_user.id):
         keyboard = InlineKeyboardMarkup()
-        keyboard.add(InlineKeyboardButton("🔔Подписаться", url=f"https://t.me/{CHANNEL_USERNAME[1:]}"))
+        keyboard.add(InlineKeyboardButton("🔔Подписаться"))
         keyboard.add(InlineKeyboardButton("✅Проверить подписку", callback_data="check_subscription"))
         
         bot.send_message(
@@ -192,24 +192,24 @@ def set_language(call):
 # Обработчик для кнопки "Выбрать язык"
 @bot.callback_query_handler(func=lambda call: call.data == "choose_language")
 def choose_language(call):
-    keyboard = InlineKeyboardMarkup(row_width=5)  # Устанавливаем 4 кнопки в ряд
+    keyboard = InlineKeyboardMarkup(row_width=5)  # Устанавливаем 5 кнопок в ряд
 
-    # Первый блок из 4 языков
+    # Первый ряд из 5 кнопок
     keyboard.add(
-        InlineKeyboardButton("🇷🇺Русский🇷🇺", callback_data="lang_ru"),
-        InlineKeyboardButton("🇬🇧English🇬🇧", callback_data="lang_en"),
-        InlineKeyboardButton("🇮🇩Indonesia🇮🇩", callback_data="lang_हिंदी"),
-        InlineKeyboardButton("🇧🇷Brazilian🇧🇷", callback_data="lang_br"),
-        InlineKeyboardButton("🇪🇸Español🇪🇸", callback_data="lang_es")
+        InlineKeyboardButton("🇷🇺 Русский", callback_data="lang_ru"),
+        InlineKeyboardButton("🇬🇧 English", callback_data="lang_en"),
+        InlineKeyboardButton("🇮🇩 Indonesia", callback_data="lang_id"),  # Добавлена запятая
+        InlineKeyboardButton("🇧🇷 Brazilian", callback_data="lang_br"),
+        InlineKeyboardButton("🇪🇸 Español", callback_data="lang_es")
     )
 
-    # Второй блок из 4 языков
+    # Второй ряд из 5 кнопок
     keyboard.add(
-        InlineKeyboardButton("🇺🇿Ozarbayjon🇺🇿", callback_data="lang_oz"),
-        InlineKeyboardButton("🇦🇿Azərbaycan🇦🇿", callback_data="lang_az"),
-        InlineKeyboardButton("🇹🇷Türkçe🇹🇷", callback_data="lang_tu"),
-        InlineKeyboardButton("🇸🇦ا🇸🇦للغة المختارة: عرب", callback_data="lang_ar"),
-        InlineKeyboardButton("🇵🇹Português🇵🇹", callback_data="lang_po")
+        InlineKeyboardButton("🇺🇿 O'zbek", callback_data="lang_oz"),
+        InlineKeyboardButton("🇦🇿 Azarbaycan", callback_data="lang_az"),
+        InlineKeyboardButton("🇹🇷 Türkçe", callback_data="lang_tu"),
+        InlineKeyboardButton("🇸🇦 العربية", callback_data="lang_ar"),
+        InlineKeyboardButton("🇵🇹 Português", callback_data="lang_po")
     )
 
     bot.send_message(
