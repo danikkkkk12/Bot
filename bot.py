@@ -259,6 +259,6 @@ def return_to_main_menu(call):
     send_main_menu(call.message.chat.id)
 
 # Запуск бота
-if __name__ == '__main__'
+if __name__ == '__main__':
     logger.info("Бот запущен")
     bot.infinity_polling()
