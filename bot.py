@@ -211,12 +211,12 @@ def choose_language(call):
     )
 
 # Обработчик для кнопки "Получить сигнал"
-@bot.callback_query_handler(func=lambda call: call.data == "get_signal")
+@bot.callback_query_handler(func=lambda call: call.data == "🤖get_signal🤖")
 def get_signal(call):
     bot.send_message(call.message.chat.id, "👾 Сигнал 👾: Красное (заглушка)")
 
 # Обработчик для кнопки "Инструкция"
-@bot.callback_query_handler(func=lambda call: call.data == "instruction")
+@bot.callback_query_handler(func=lambda call: call.data == "📚instruction📚")
 def instruction(call):
     instruction_text = (
         "🤖 Бот основан и обучен на кластерной нейронной сети OpenAI!\n\n"
@@ -238,7 +238,7 @@ def instruction(call):
     bot.send_message(call.message.chat.id, instruction_text)
 
 # Обработчик для кнопки "Помощь / Поддержка"
-@bot.callback_query_handler(func=lambda call: call.data == "support")
+@bot.callback_query_handler(func=lambda call: call.data == "🆘support🆘")
 def support(call):
     bot.send_message(call.message.chat.id, f"🛠 Свяжитесь с поддержкой: {SUPPORT_USERNAME}")
 
