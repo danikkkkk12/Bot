@@ -184,12 +184,16 @@ def start(message):
 # Обработчик выбора языка
 @bot.callback_query_handler(func=lambda call: call.data == "choose_language")
 def choose_language(call):
+    # Путь к картинке
+    image_path = "path/to/your/image.png"  # Укажите путь к вашей картинке
+
+    # Создаем клавиатуру с выбором языка
     keyboard = InlineKeyboardMarkup(row_width=2)  # Два блока по горизонтали
 
     # Первый блок (5 языков)
     keyboard.add(
         InlineKeyboardButton("🇷🇺 Русский", callback_data="lang_ru"),
-        InlineKeyboardButton("🇺🇿 O'zbek", callback_data="lang_oz"),
+        InlineKeyboardButton("🇬🇧 English", callback_data="lang_en"),
         InlineKeyboardButton("🇮🇩 Indonesia", callback_data="lang_id"),
         InlineKeyboardButton("🇧🇷 Brazilian", callback_data="lang_br"),
         InlineKeyboardButton("🇪🇸 Español", callback_data="lang_es")
@@ -197,19 +201,21 @@ def choose_language(call):
 
     # Второй блок (5 языков)
     keyboard.add(
-         InlineKeyboardButton("🇬🇧 English", callback_data="lang_en"),
+        InlineKeyboardButton("🇺🇿 O'zbek", callback_data="lang_oz"),
         InlineKeyboardButton("🇦🇿 Azarbaycan", callback_data="lang_az"),
         InlineKeyboardButton("🇹🇷 Türkçe", callback_data="lang_tu"),
         InlineKeyboardButton("🇸🇦 العربية", callback_data="lang_ar"),
         InlineKeyboardButton("🇵🇹 Português", callback_data="lang_po")
     )
 
-    bot.send_message(
-        call.message.chat.id,
-        "🌐 Выберите язык:",
-        reply_markup=keyboard
-    )
-
+    # Отправляем картинку с клавиатурой
+    with open(image_path, "rb") as photo:
+        bot.edit_message_media(
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,  # ID текущего сообщения
+            media=telebot.types.InputMediaPhoto(photo, caption="🌐 Выберите язык:"),
+            reply_markup=keyboard
+        )
 # Обработчик для кнопки "Получить сигнал"
 @bot.callback_query_handler(func=lambda call: call.data == "get_signal")
 def get_signal(call):
