@@ -2,13 +2,20 @@ import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import time
 import threading
+import logging
 
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Конфигурация бота
 TOKEN = "7906839757:AAFN4ll3FATz9pl1LVxZJKO-GdxLDX0GXyc"  # Токен вашего бота
 CHANNEL_USERNAME = "@CrazyMines777"  # Канал для подписки
 PROMOCODE = "CrazyMines"  # Промокод
 DEPOSIT_LINK = "https://1wcneg.com/casino/list?open=register&sub1=832597017&p=gtyb"  # Ссылка для депозита
 SUPPORT_USERNAME = "@B1ake7"  # Ваш Telegram-ник для поддержки
 MENU_IMAGE_PATH = "photo/menu.jpg"  # Путь к изображению меню
+LANGUAGE_IMAGE_PATH = "photo/language.jpg"  # Путь к изображению выбора языка
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -39,7 +46,7 @@ TEXTS = {
         "support": "🆘Help / Support🆘",
         "language_selected": "🌐 Selected language: English",
     },
-    "हिंदी": {
+    "id": {
         "main_menu": "🏠 Menu utama:",
         "get_signal": "🤖Mendapatkan sinyal🤖",
         "instruction": "📚Petunjuk📚",
@@ -116,7 +123,7 @@ def check_subscription(user_id):
         member = bot.get_chat_member(CHANNEL_USERNAME, user_id)
         return member.status in ["member", "administrator", "creator"]
     except Exception as e:
-        print(f"❌Ошибка при проверке подписки: {e}")
+        logger.error(f"❌Ошибка при проверке подписки: {e}")
         return False
 
 # Функция для отправки сообщения через 1 минуту
@@ -160,7 +167,7 @@ def start(message):
     user_name = message.from_user.first_name
     if not check_subscription(message.from_user.id):
         keyboard = InlineKeyboardMarkup()
-        keyboard.add(InlineKeyboardButton("🔔Подписаться"))
+        keyboard.add(InlineKeyboardButton("🔔Подписаться", url=f"https://t.me/{CHANNEL_USERNAME[1:]}"))
         keyboard.add(InlineKeyboardButton("✅Проверить подписку", callback_data="check_subscription"))
         
         bot.send_message(
@@ -184,36 +191,36 @@ def start(message):
 # Обработчик выбора языка
 @bot.callback_query_handler(func=lambda call: call.data == "choose_language")
 def choose_language(call):
-    # Путь к картинке
-    image_path = "photo/menu.jpg"  # Укажите путь к вашей картинке
-
     # Создаем клавиатуру с выбором языка
     keyboard = InlineKeyboardMarkup(row_width=2)  # Два блока по горизонтали
 
     # Первый блок (5 языков)
     keyboard.add(
-        InlineKeyboardButton("🇷🇺Русский", callback_data="lang_ru"),
-        InlineKeyboardButton("🇬🇧English", callback_data="lang_en"),
-        InlineKeyboardButton("🇮🇩Indonesia", callback_data="lang_id"),
-        InlineKeyboardButton("🇧🇷Brazilian", callback_data="lang_br"),
-        InlineKeyboardButton("🇪🇸Español", callback_data="lang_es")
+        InlineKeyboardButton("🇷🇺 Русский", callback_data="lang_ru"),
+        InlineKeyboardButton("🇬🇧 English", callback_data="lang_en"),
+        InlineKeyboardButton("🇮🇩 Indonesia", callback_data="lang_id"),
+        InlineKeyboardButton("🇧🇷 Brazilian", callback_data="lang_br"),
+        InlineKeyboardButton("🇪🇸 Español", callback_data="lang_es")
     )
 
     # Второй блок (5 языков)
     keyboard.add(
-        InlineKeyboardButton("🇺🇿O'zbek", callback_data="lang_oz"),
-        InlineKeyboardButton("🇦🇿Azarbaycan", callback_data="lang_az"),
-        InlineKeyboardButton("🇹🇷Türkçe", callback_data="lang_tu"),
-        InlineKeyboardButton("🇸🇦العربية", callback_data="lang_ar"),
-        InlineKeyboardButton("🇵🇹Português", callback_data="lang_po")
+        InlineKeyboardButton("🇺🇿 O'zbek", callback_data="lang_oz"),
+        InlineKeyboardButton("🇦🇿 Azarbaycan", callback_data="lang_az"),
+        InlineKeyboardButton("🇹🇷 Türkçe", callback_data="lang_tu"),
+        InlineKeyboardButton("🇸🇦 العربية", callback_data="lang_ar"),
+        InlineKeyboardButton("🇵🇹 Português", callback_data="lang_po")
     )
-    with open(image_path, "rb") as photo:
+
+    # Отправляем картинку с клавиатурой
+    with open(LANGUAGE_IMAGE_PATH, "rb") as photo:
         bot.edit_message_media(
             chat_id=call.message.chat.id,
-            message_id=call.message.message_id,  # ID текущего сообщения
+            message_id=call.message.message_id,
             media=telebot.types.InputMediaPhoto(photo, caption="🌐 Выберите язык:"),
             reply_markup=keyboard
         )
+
 # Обработчик для кнопки "Получить сигнал"
 @bot.callback_query_handler(func=lambda call: call.data == "get_signal")
 def get_signal(call):
@@ -251,5 +258,7 @@ def support(call):
 def return_to_main_menu(call):
     send_main_menu(call.message.chat.id)
 
+# Запуск бота
 if __name__ == '__main__':
-    bot.polling(none_stop=True)
+    logger.info("Бот запущен")
+    bot.infinity_polling()
