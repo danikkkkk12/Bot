@@ -185,7 +185,7 @@ def start(message):
 @bot.callback_query_handler(func=lambda call: call.data == "choose_language")
 def choose_language(call):
     # Путь к картинке
-    image_path = "path/to/your/image.png"  # Укажите путь к вашей картинке
+    image_path = "photo/menu.jpg"  # Укажите путь к вашей картинке
 
     # Создаем клавиатуру с выбором языка
     keyboard = InlineKeyboardMarkup(row_width=2)  # Два блока по горизонтали
