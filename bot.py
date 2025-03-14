@@ -224,6 +224,26 @@ def choose_language(call):
     except Exception as e:
         logger.error(f"❌ Ошибка в choose_language: {e}")
         bot.send_message(call.message.chat.id, "❌ Произошла ошибка при выборе языка. Пожалуйста, попробуйте ещё раз.")
+
+# Обработчик для выбора языка
+@bot.callback_query_handler(func=lambda call: call.data.startswith("lang_"))
+def set_language(call):
+    try:
+        # Получаем выбранный язык из callback_data
+        lang = call.data.split("_")[1]  # Например, "lang_ru" -> "ru"
+        
+        # Сохраняем выбранный язык для пользователя
+        user_languages[call.from_user.id] = lang
+        
+        # Отправляем сообщение об успешном выборе языка
+        bot.answer_callback_query(call.id, f"🌐 Язык изменен на {lang}")
+        
+        # Обновляем главное меню с новым языком
+        send_main_menu(call.message.chat.id)
+    except Exception as e:
+        logger.error(f"❌ Ошибка в set_language: {e}")
+        bot.send_message(call.message.chat.id, "❌ Произошла ошибка при выборе языка. Пожалуйста, попробуйте ещё раз.")
+
 # Обработчик для кнопки "Получить сигнал"
 @bot.callback_query_handler(func=lambda call: call.data == "get_signal")
 def get_signal(call):
