@@ -182,30 +182,22 @@ def start(message):
             threading.Thread(target=send_delayed_message, args=(message.chat.id,)).start()
 
 # Обработчик выбора языка
-@bot.callback_query_handler(func=lambda call: call.data.startswith("lang_"))
-def set_language(call):
-    lang = call.data.split("_")[1]
-    user_languages[call.from_user.id] = lang
-    bot.answer_callback_query(call.id, f"🌐 Язык изменен на {lang}")
-    send_main_menu(call.message.chat.id)
-
-# Обработчик для кнопки "Выбрать язык"
 @bot.callback_query_handler(func=lambda call: call.data == "choose_language")
 def choose_language(call):
-    keyboard = InlineKeyboardMarkup(row_width=5)  # Устанавливаем 5 кнопок в ряд
+    keyboard = InlineKeyboardMarkup(row_width=2)  # Два блока по горизонтали
 
-    # Первый ряд из 5 кнопок
+    # Первый блок (5 языков)
     keyboard.add(
         InlineKeyboardButton("🇷🇺 Русский", callback_data="lang_ru"),
-        InlineKeyboardButton("🇬🇧 English", callback_data="lang_en"),
-        InlineKeyboardButton("🇮🇩 Indonesia", callback_data="lang_id"),  # Добавлена запятая
+        InlineKeyboardButton("🇺🇿 O'zbek", callback_data="lang_oz"),
+        InlineKeyboardButton("🇮🇩 Indonesia", callback_data="lang_id"),
         InlineKeyboardButton("🇧🇷 Brazilian", callback_data="lang_br"),
         InlineKeyboardButton("🇪🇸 Español", callback_data="lang_es")
     )
 
-    # Второй ряд из 5 кнопок
+    # Второй блок (5 языков)
     keyboard.add(
-        InlineKeyboardButton("🇺🇿 O'zbek", callback_data="lang_oz"),
+         InlineKeyboardButton("🇬🇧 English", callback_data="lang_en"),
         InlineKeyboardButton("🇦🇿 Azarbaycan", callback_data="lang_az"),
         InlineKeyboardButton("🇹🇷 Türkçe", callback_data="lang_tu"),
         InlineKeyboardButton("🇸🇦 العربية", callback_data="lang_ar"),
