@@ -196,20 +196,20 @@ def choose_language(call):
 
     # Первый блок (5 языков)
     keyboard.add(
-        InlineKeyboardButton("🇷🇺 Русский", callback_data="lang_ru"),
-        InlineKeyboardButton("🇬🇧 English", callback_data="lang_en"),
-        InlineKeyboardButton("🇮🇩 Indonesia", callback_data="lang_id"),
-        InlineKeyboardButton("🇧🇷 Brazilian", callback_data="lang_br"),
-        InlineKeyboardButton("🇪🇸 Español", callback_data="lang_es")
+        InlineKeyboardButton("🇷🇺Русский", callback_data="lang_ru"),
+        InlineKeyboardButton("🇬🇧English", callback_data="lang_en"),
+        InlineKeyboardButton("🇮🇩Indonesia", callback_data="lang_id"),
+        InlineKeyboardButton("🇧🇷Brazilian", callback_data="lang_br"),
+        InlineKeyboardButton("🇪🇸Español", callback_data="lang_es")
     )
 
     # Второй блок (5 языков)
     keyboard.add(
-        InlineKeyboardButton("🇺🇿 O'zbek", callback_data="lang_oz"),
-        InlineKeyboardButton("🇦🇿 Azarbaycan", callback_data="lang_az"),
-        InlineKeyboardButton("🇹🇷 Türkçe", callback_data="lang_tu"),
-        InlineKeyboardButton("🇸🇦 العربية", callback_data="lang_ar"),
-        InlineKeyboardButton("🇵🇹 Português", callback_data="lang_po")
+        InlineKeyboardButton("🇺🇿O'zbek", callback_data="lang_oz"),
+        InlineKeyboardButton("🇦🇿Azarbaycan", callback_data="lang_az"),
+        InlineKeyboardButton("🇹🇷Türkçe", callback_data="lang_tu"),
+        InlineKeyboardButton("🇸🇦العربية", callback_data="lang_ar"),
+        InlineKeyboardButton("🇵🇹Português", callback_data="lang_po")
     )
 
     # Отправляем картинку с клавиатурой
@@ -259,6 +259,6 @@ def return_to_main_menu(call):
     send_main_menu(call.message.chat.id)
 
 # Запуск бота
-if __name__ == '__main__':
+if __name__ == '__main__'
     logger.info("Бот запущен")
     bot.infinity_polling()
