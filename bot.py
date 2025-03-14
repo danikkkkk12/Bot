@@ -15,7 +15,7 @@ bot = telebot.TeleBot(TOKEN)
 # Словарь для отслеживания, было ли отправлено сообщение пользователю
 user_notifications = {}
 
-# Словарь для отслеживания, внес ли пользователь депозит
+# Словарь для отслеживания, внес ли пользователь депозитmen
 user_deposits = {}
 
 # Словарь для хранения выбранного языка для каждого пользователя
@@ -141,10 +141,10 @@ def send_delayed_message(chat_id):
 # Функция для отправки главного меню
 def send_main_menu(chat_id):
     keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton(get_text(chat_id, "🤖get_signal🤖"), callback_data="get_signal"))
-    keyboard.add(InlineKeyboardButton(get_text(chat_id, "📚instruction📚"), callback_data="instruction"))
-    keyboard.add(InlineKeyboardButton(get_text(chat_id, "🌐choose_language🌐"), callback_data="choose_language"))
-    keyboard.add(InlineKeyboardButton(get_text(chat_id, "🆘support🆘"), url=f"https://t.me/{SUPPORT_USERNAME[1:]}"))
+    keyboard.add(InlineKeyboardButton(get_text(chat_id, "get_signal"), callback_data="get_signal"))
+    keyboard.add(InlineKeyboardButton(get_text(chat_id, "instruction"), callback_data="instruction"))
+    keyboard.add(InlineKeyboardButton(get_text(chat_id, "choose_language"), callback_data="choose_language"))
+    keyboard.add(InlineKeyboardButton(get_text(chat_id, "support"), url=f"https://t.me/{SUPPORT_USERNAME[1:]}"))
     
     with open(MENU_IMAGE_PATH, "rb") as photo:
         bot.send_photo(
@@ -208,7 +208,7 @@ def choose_language(call):
         call.message.chat.id,
         "🌐 Выберите язык:",
         reply_markup=keyboard
-    )
+    
 
 # Обработчик для кнопки "Получить сигнал"
 @bot.callback_query_handler(func=lambda call: call.data == "get_signal")
