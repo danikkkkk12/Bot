@@ -72,7 +72,6 @@ def check_subscription(user_id):
 
 # Функция для отправки сообщения через 1 минуту
 def send_delayed_message(chat_id):
-    time.sleep(60)  # Задержка в 1 минуту
     if chat_id not in user_notifications or not user_notifications[chat_id]:
         keyboard = InlineKeyboardMarkup()
         keyboard.add(InlineKeyboardButton("💰Внести депозит", url=DEPOSIT_LINK))
