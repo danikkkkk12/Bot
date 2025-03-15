@@ -108,14 +108,33 @@ def send_main_menu(chat_id):
 # Обработчик команды /start
 @bot.message_handler(commands=['start'])
 def start(message):
-    user_name = message.from_user.first_name
-    if not check_subscription(message.from_user.id):
+    welcome_text = (
+        "What can this bot do?\n\n"
+        "⚠️ Внимание, это тот самый нашумевший сигнальный бот😎\n\n"
+        "🟣 Обучается на новейших нейросетях!\n\n"
+        "🟣 Уже сыграно более 10.000 игр!\n\n"
+        "🟣 В 84% бот выдает верный сигнал!\n\n"
+        "🟢 Бот до сих пор обучается и улучшает свои показатели!"
+    )
+    
+    # Создаем кнопку "Start"
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton("Start", callback_data="start_bot"))
+    
+    # Отправляем сообщение с кнопкой
+    bot.send_message(message.chat.id, welcome_text, reply_markup=keyboard)
+
+# Обработчик для кнопки "Start"
+@bot.callback_query_handler(func=lambda call: call.data == "start_bot")
+def start_bot(call):
+    user_name = call.from_user.first_name
+    if not check_subscription(call.from_user.id):
         keyboard = InlineKeyboardMarkup()
         keyboard.add(InlineKeyboardButton("🔔Подписаться", url=f"https://t.me/{CHANNEL_USERNAME[1:]}"))
         keyboard.add(InlineKeyboardButton("✅Проверить подписку", callback_data="check_subscription"))
         
         bot.send_message(
-            message.chat.id,
+            call.message.chat.id,
             f"Добро пожаловать, {user_name}!\n\nДля использования бота - подпишись на наш канал 🤝\n\nНажми на кнопку 'Подписаться', чтобы перейти в канал: https://t.me/{CHANNEL_USERNAME[1:]}",
             reply_markup=keyboard
         )
@@ -125,39 +144,12 @@ def start(message):
         keyboard.add(InlineKeyboardButton("🏠 Вернуться в главное меню", callback_data="return_to_main_menu"))
         
         bot.send_message(
-            message.chat.id,
+            call.message.chat.id,
             f"🌐 Шаг 1 - Зарегистрируйся\n\n ⚪ Для синхронизации с ботом, вам необходимо создать новый аккаунт строго по ссылке из бота и примените промокод:\n\nПромокод: 👉 {PROMOCODE} 👈\n\n🔵 Если вы открыли ссылку и попали в старый аккаунт, то вам нужно:\n\n- Выйти из старого аккаунта\n- Закрыть сайт\n- Снова открыть сайт через кнопку в боте\n- Пройти регистрацию с указанием промокода {PROMOCODE}\n\n‼️ После успешной регистрации, бот автоматически отправит вам уведомление об успешной синхронизации в течение минуты.",
             reply_markup=keyboard
         )
-        if message.chat.id not in user_notifications or not user_notifications[message.chat.id]:
-            threading.Thread(target=send_delayed_message, args=(message.chat.id,)).start()
-
-# Обработчик для нового пользователя
-@bot.message_handler(func=lambda message: True)
-def welcome_new_user(message):
-    # Проверяем, что это первое сообщение от пользователя
-    if message.text != "/start":
-        welcome_text = (
-            "What can this bot do?\n\n"
-            "⚠️ Внимание, это тот самый нашумевший сигнальный бот😎\n\n"
-            "🟣 Обучается на новейших нейросетях!\n\n"
-            "🟣 Уже сыграно более 10.000 игр!\n\n"
-            "🟣 В 84% бот выдает верный сигнал!\n\n"
-            "🟢 Бот до сих пор обучается и улучшает свои показатели!"
-        )
-        
-        # Создаем кнопку "Start"
-        keyboard = InlineKeyboardMarkup()
-        keyboard.add(InlineKeyboardButton("Start", callback_data="start_bot"))
-        
-        # Отправляем сообщение с кнопкой
-        bot.send_message(message.chat.id, welcome_text, reply_markup=keyboard)
-
-# Обработчик для кнопки "Start"
-@bot.callback_query_handler(func=lambda call: call.data == "start_bot")
-def start_bot(call):
-    # Отправляем команду /start
-    bot.send_message(call.message.chat.id, "/start")
+        if call.message.chat.id not in user_notifications or not user_notifications[call.message.chat.id]:
+            threading.Thread(target=send_delayed_message, args=(call.message.chat.id,)).start()
 
 # Обработчик выбора языка
 @bot.callback_query_handler(func=lambda call: call.data == "choose_language")
@@ -184,7 +176,7 @@ def choose_language(call):
             InlineKeyboardButton("🇵🇹 Português", callback_data="lang_po")
         )
 
-        # Отправляем новое сообщение с картинкой и клавиатурой
+        # Отправляем новое сообщение с картинкой и клавиатура
         with open(LANGUAGE_IMAGE_PATH, "rb") as photo:
             bot.send_photo(
                 chat_id=call.message.chat.id,
