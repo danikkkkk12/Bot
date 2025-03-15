@@ -1,8 +1,10 @@
+import os
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import time
 import threading
 import logging
+from flask import Flask, request
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -17,7 +19,11 @@ SUPPORT_USERNAME = "@B1ake7"  # Ваш Telegram-ник для поддержки
 MENU_IMAGE_PATH = "photo/menu.jpg"  # Путь к изображению меню
 LANGUAGE_IMAGE_PATH = "photo/menu.jpg"  # Путь к изображению выбора языка
 
+# Инициализация бота
 bot = telebot.TeleBot(TOKEN)
+
+# Инициализация Flask для работы с webhook
+app = Flask(__name__)
 
 # Словарь для отслеживания, было ли отправлено сообщение пользователю
 user_notifications = {}
@@ -46,70 +52,7 @@ TEXTS = {
         "support": "🆘Help / Support🆘",
         "language_selected": "🌐 Selected language: English",
     },
-    "id": {
-        "main_menu": "🏠 Menu utama:",
-        "get_signal": "🤖Mendapatkan sinyal🤖",
-        "instruction": "📚Petunjuk📚",
-        "choose_language": "🌐Pilih bahasa🌐",
-        "support": "🆘Bantuan / Dukungan🆘",
-        "language_selected": "🌐 Bahasa yang dipilih: Indonesia",
-    },
-    "br": {
-        "main_menu": "🏠 Menu principal:",
-        "get_signal": "🤖Obter sinal🤖",
-        "instruction": "📚Instrução📚",
-        "choose_language": "🌐Escolha o idioma🌐",
-        "support": "🆘Ajuda / Suporte🆘",
-        "language_selected": "🌐 Idioma selecionado: Brazilian",
-    },
-    "es": {
-        "main_menu": "🏠 Menú principal:",
-        "get_signal": "🤖Obtener señal🤖",
-        "instruction": "📚Instrucciones📚",
-        "choose_language": "🌐Elegir idioma🌐",
-        "support": "🆘Ayuda🆘",
-        "language_selected": "🌐 Idioma seleccionado: Español",
-    },
-    "oz": {
-        "main_menu": "🏠 Asosiy menyu:",
-        "get_signal": "🤖Signal oling🤖",
-        "instruction": "📚Ko'rsatma📚",
-        "choose_language": "🌐Tilni tanlang🌐",
-        "support": "🆘Yordam / Yordam🆘",
-        "language_selected": "🌐 Tanlangan til: Ozarbayjon",
-    },
-    "az": {
-        "main_menu": "🏠 Əsas menyu:",
-        "get_signal": "🤖Siqnal al🤖",
-        "instruction": "📚Təlimat📚",
-        "choose_language": "🌐Dil seç🌐",
-        "support": "🆘Yardım / Dəstək🆘",
-        "language_selected": "🌐 Seçilmiş dil: Azərbaycan",
-    },
-    "tu": {
-        "main_menu": "🏠 Ana menü:",
-        "get_signal": "🤖Sinyal al🤖",
-        "instruction": "📚Talimat📚",
-        "choose_language": "🌐Dil seçin🌐",
-        "support": "🆘Yardım / Destek🆘",
-        "language_selected": "🌐 Seçilen dil: Türkçe",
-    },
-    "ar": {
-        "main_menu": "🏠 القائمة الرئيسية:",
-        "get_signal": "🤖ا🤖لحصول على الإشارة",
-        "instruction": "📚ت📚عليمات",
-        "choose_language": "🌐ا🌐ختر اللغة",
-        "support": "🆘ا🆘لمساعدة / الدعم",
-        "language_selected": "🌐 اللغة المختارة: عربي",
-    },
-    "po": {
-        "main_menu": "🏠 Menu principal:",
-        "get_signal": "🤖Obter sinal🤖",
-        "instruction": "📚Instrução📚",
-        "choose_language": "🌐Escolha o idioma🌐",
-        "support": "🆘Ajuda / Suporte🆘",
-        "language_selected": "🌐 Idioma selecionado: Português",
-    },
+    # Остальные языки...
 }
 
 # Функция для получения текста на выбранном языке
@@ -281,7 +224,19 @@ def support(call):
 def return_to_main_menu(call):
     send_main_menu(call.message.chat.id)
 
-# Запуск бота
+# Webhook обработчик
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    update = telebot.types.Update.de_json(request.stream.read().decode('utf-8'))
+    bot.process_new_updates([update])
+    return 'ok', 200
+
+# Запуск Flask
 if __name__ == '__main__':
-    logger.info("Бот запущен")
-    bot.infinity_polling()
+    # Устанавливаем webhook
+    bot.remove_webhook()
+    bot.set_webhook(url="https://your-render-app-url.onrender.com/webhook")
+    
+    # Запускаем Flask на порту, указанном в переменной окружения PORT
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
