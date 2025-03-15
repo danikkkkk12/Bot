@@ -15,7 +15,7 @@ PROMOCODE = "CrazyMines"  # Промокод
 DEPOSIT_LINK = "https://1wcneg.com/casino/list?open=register&sub1=832597017&p=gtyb"  # Ссылка для депозита
 SUPPORT_USERNAME = "@B1ake7"  # Ваш Telegram-ник для поддержки
 MENU_IMAGE_PATH = "photo/menu.jpg"  # Путь к изображению меню
-
+LANGUAGE_IMAGE_PATH = "photo/menu.jpg"  # Путь к изображению выбора языка
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -214,7 +214,7 @@ def choose_language(call):
         )
 
         # Отправляем новое сообщение с картинкой и клавиатурой
-        with open(MENU_IMAGE_PATH, "rb") as photo:
+        with open(LANGUAGE_IMAGE_PATH, "rb") as photo:
             bot.send_photo(
                 chat_id=call.message.chat.id,
                 photo=photo,
