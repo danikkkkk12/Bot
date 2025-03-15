@@ -213,7 +213,12 @@ def instruction(call):
         "Вернуться в главное меню"
     )
     
-    bot.send_message(call.message.chat.id, instruction_text)
+    # Создаем клавиатуру с кнопкой "Вернуться в главное меню"
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton("Вернуться в главное меню", callback_data="return_to_main_menu"))
+    
+    # Отправляем сообщение с инструкцией и кнопкой
+    bot.send_message(call.message.chat.id, instruction_text, reply_markup=keyboard)
 
 # Обработчик для кнопки "Помощь / Поддержка"
 @bot.callback_query_handler(func=lambda call: call.data == "support")
