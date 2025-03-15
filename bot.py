@@ -108,7 +108,7 @@ def send_main_menu(chat_id):
 @bot.message_handler(commands=['start'])
 def start(message):
     welcome_text = (
-        "What can this bot do?\n\n"
+        "Что умеет этот бот?\n\n"
         "⚠️ Внимание, это тот самый нашумевший сигнальный бот😎\n\n"
         "🟣 Обучается на новейших нейросетях!\n\n"
         "🟣 Уже сыграно более 10.000 игр!\n\n"
@@ -149,6 +149,33 @@ def start_bot(call):
         )
         if call.message.chat.id not in user_notifications or not user_notifications[call.message.chat.id]:
             threading.Thread(target=send_delayed_message, args=(call.message.chat.id,)).start()
+
+# Обработчик для кнопки "Проверить подписку"
+@bot.callback_query_handler(func=lambda call: call.data == "check_subscription")
+def check_subscription_callback(call):
+    user_id = call.from_user.id
+    if check_subscription(user_id):
+        bot.send_message(
+            call.message.chat.id,
+            "✅ Вы подписаны на канал! Теперь вы можете продолжить использование бота."
+        )
+        # Отправляем следующий шаг после проверки подписки
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(InlineKeyboardButton("📲Зарегистрироваться", url=DEPOSIT_LINK))
+        keyboard.add(InlineKeyboardButton("🏠 Вернуться в главное меню", callback_data="return_to_main_menu"))
+        
+        bot.send_message(
+            call.message.chat.id,
+            f"🌐 Шаг 1 - Зарегистрируйся\n\n ⚪ Для синхронизации с ботом, вам необходимо создать новый аккаунт строго по ссылке из бота и примените промокод:\n\nПромокод: 👉 {PROMOCODE} 👈\n\n🔵 Если вы открыли ссылку и попали в старый аккаунт, то вам нужно:\n\n- Выйти из старого аккаунта\n- Закрыть сайт\n- Снова открыть сайт через кнопку в боте\n- Пройти регистрацию с указанием промокода {PROMOCODE}\n\n‼️ После успешной регистрации, бот автоматически отправит вам уведомление об успешной синхронизации в течение минуты.",
+            reply_markup=keyboard
+        )
+        if call.message.chat.id not in user_notifications or not user_notifications[call.message.chat.id]:
+            threading.Thread(target=send_delayed_message, args=(call.message.chat.id,)).start()
+    else:
+        bot.send_message(
+            call.message.chat.id,
+            "❌ Вы еще не подписаны на канал. Пожалуйста, подпишитесь, чтобы продолжить использование бота."
+        )
 
 # Обработчик выбора языка
 @bot.callback_query_handler(func=lambda call: call.data == "choose_language")
@@ -215,6 +242,7 @@ def get_signal(call):
     else:
         # Пользователь не внес депозит
         bot.send_message(call.message.chat.id, "❌ Для получения сигналов необходимо внести депозит.")
+
 # Обработчик для кнопки "Инструкция"
 @bot.callback_query_handler(func=lambda call: call.data == "instruction")
 def instruction(call):
