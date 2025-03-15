@@ -255,7 +255,6 @@ def webhook():
     bot.process_new_updates([update])
     return 'ok', 200
 
-# Обработчик для постбеков от 1win
 @app.route('/webhook/1win', methods=['POST'])
 def webhook_1win():
     try:
@@ -263,21 +262,69 @@ def webhook_1win():
         data = request.json  # Данные в формате JSON
         logger.info(f"Данные от 1win: {data}")  # Логируем данные для отладки
 
-        # Пример данных от 1win (зависит от того, что они отправляют)
+        # Извлекаем данные из JSON
+        event_id = data.get("event_id")  # ID события
+        date = data.get("date")  # Дата события
+        hash_id = data.get("hash_id")  # ID языка
+        hash_name = data.get("hash_name")  # Название языка
+        source_id = data.get("source_id")  # ID источника
+        source_name = data.get("source_name")  # Название источника
+        event = data.get("event")  # Тип события (например, deposit, registration)
+        amount = data.get("amount")  # Сумма (если есть)
+        transaction_id = data.get("transaction_id")  # ID транзакции
+        country = data.get("country")  # Страна пользователя
         user_id = data.get("user_id")  # ID пользователя
-        event_type = data.get("event_type")  # Тип события (регистрация, депозит и т.д.)
-        amount = data.get("amount")  # Сумма депозита (если есть)
+
+        # Логируем все данные для отладки
+        logger.info(
+            f"Получены данные: event_id={event_id}, date={date}, hash_id={hash_id}, "
+            f"hash_name={hash_name}, source_id={source_id}, source_name={source_name}, "
+            f"event={event}, amount={amount}, transaction_id={transaction_id}, "
+            f"country={country}, user_id={user_id}"
+        )
 
         # Обработка событий
-        if event_type == "registration":
+        if event == "registration":
             # Пользователь зарегистрировался
             user_deposits[user_id] = {"registered": True, "deposit_made": False}
             logger.info(f"Пользователь {user_id} зарегистрировался.")
-        elif event_type == "deposit":
+            
+            # Отправляем уведомление пользователю
+            try:
+                bot.send_message(
+                    chat_id=user_id,
+                    text="✅ Вы успешно зарегистрировались! Теперь вы можете внести депозит."
+                )
+            except Exception as e:
+                logger.error(f"❌ Ошибка при отправке уведомления пользователю {user_id}: {e}")
+
+        elif event == "deposit":
             # Пользователь внес депозит
             if user_id in user_deposits:
                 user_deposits[user_id]["deposit_made"] = True
                 logger.info(f"Пользователь {user_id} внес депозит на сумму {amount}.")
+                
+                # Отправляем уведомление пользователю
+                try:
+                    bot.send_message(
+                        chat_id=user_id,
+                        text=f"✅ Спасибо! Ваш депозит на сумму {amount} успешно зачислен."
+                    )
+                except Exception as e:
+                    logger.error(f"❌ Ошибка при отправке уведомления пользователю {user_id}: {e}")
+
+        elif event == "withdrawal":
+            # Пользователь вывел средства
+            logger.info(f"Пользователь {user_id} вывел средства.")
+            
+            # Отправляем уведомление пользователю
+            try:
+                bot.send_message(
+                    chat_id=user_id,
+                    text=f"✅ Вы успешно вывели средства. Сумма: {amount}."
+                )
+            except Exception as e:
+                logger.error(f"❌ Ошибка при отправке уведомления пользователю {user_id}: {e}")
 
         # Отправляем успешный ответ
         return jsonify({"status": "success"}), 200
