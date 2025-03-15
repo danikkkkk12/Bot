@@ -207,11 +207,15 @@ def set_language(call):
         logger.error(f"❌ Ошибка в set_language: {e}")
         bot.send_message(call.message.chat.id, "❌ Произошла ошибка при выборе языка. Пожалуйста, попробуйте ещё раз.")
 
-# Обработчик для кнопки "Получить сигнал"
 @bot.callback_query_handler(func=lambda call: call.data == "get_signal")
 def get_signal(call):
-    bot.send_message(call.message.chat.id, "👾 Сигнал 👾: Красное (заглушка)")
-
+    user_id = call.from_user.id
+    if user_id in user_deposits and user_deposits[user_id].get("deposit_made", False):
+        # Пользователь внес депозит, разрешаем доступ к сигналам
+        bot.send_message(call.message.chat.id, "👾 Сигнал 👾: Красное (заглушка)")
+    else:
+        # Пользователь не внес депозит
+        bot.send_message(call.message.chat.id, "❌ Для получения сигналов необходимо внести депозит.")
 # Обработчик для кнопки "Инструкция"
 @bot.callback_query_handler(func=lambda call: call.data == "instruction")
 def instruction(call):
@@ -263,68 +267,33 @@ def webhook_1win():
         logger.info(f"Данные от 1win: {data}")  # Логируем данные для отладки
 
         # Извлекаем данные из JSON
-        event_id = data.get("event_id")  # ID события
-        date = data.get("date")  # Дата события
-        hash_id = data.get("hash_id")  # ID языка
-        hash_name = data.get("hash_name")  # Название языка
-        source_id = data.get("source_id")  # ID источника
-        source_name = data.get("source_name")  # Название источника
         event = data.get("event")  # Тип события (например, deposit, registration)
-        amount = data.get("amount")  # Сумма (если есть)
-        transaction_id = data.get("transaction_id")  # ID транзакции
-        country = data.get("country")  # Страна пользователя
         user_id = data.get("user_id")  # ID пользователя
-
-        # Логируем все данные для отладки
-        logger.info(
-            f"Получены данные: event_id={event_id}, date={date}, hash_id={hash_id}, "
-            f"hash_name={hash_name}, source_id={source_id}, source_name={source_name}, "
-            f"event={event}, amount={amount}, transaction_id={transaction_id}, "
-            f"country={country}, user_id={user_id}"
-        )
+        amount = data.get("amount")  # Сумма (если есть)
+        promo_code = data.get("promo_code")  # Промокод (если есть)
 
         # Обработка событий
         if event == "registration":
             # Пользователь зарегистрировался
             user_deposits[user_id] = {"registered": True, "deposit_made": False}
             logger.info(f"Пользователь {user_id} зарегистрировался.")
-            
-            # Отправляем уведомление пользователю
-            try:
-                bot.send_message(
-                    chat_id=user_id,
-                    text="✅ Вы успешно зарегистрировались! Теперь вы можете внести депозит."
-                )
-            except Exception as e:
-                logger.error(f"❌ Ошибка при отправке уведомления пользователю {user_id}: {e}")
+            bot.send_message(user_id, "✅ Вы успешно зарегистрировались! Теперь введите промокод.")
+
+        elif event == "promo_code_used":
+            # Пользователь ввел промокод
+            if promo_code == PROMOCODE:
+                logger.info(f"Пользователь {user_id} ввел правильный промокод.")
+                bot.send_message(user_id, "✅ Промокод принят! Теперь внесите депозит.")
+            else:
+                logger.info(f"Пользователь {user_id} ввел неправильный промокод.")
+                bot.send_message(user_id, "❌ Неправильный промокод. Пожалуйста, введите правильный промокод.")
 
         elif event == "deposit":
             # Пользователь внес депозит
             if user_id in user_deposits:
                 user_deposits[user_id]["deposit_made"] = True
                 logger.info(f"Пользователь {user_id} внес депозит на сумму {amount}.")
-                
-                # Отправляем уведомление пользователю
-                try:
-                    bot.send_message(
-                        chat_id=user_id,
-                        text=f"✅ Спасибо! Ваш депозит на сумму {amount} успешно зачислен."
-                    )
-                except Exception as e:
-                    logger.error(f"❌ Ошибка при отправке уведомления пользователю {user_id}: {e}")
-
-        elif event == "withdrawal":
-            # Пользователь вывел средства
-            logger.info(f"Пользователь {user_id} вывел средства.")
-            
-            # Отправляем уведомление пользователю
-            try:
-                bot.send_message(
-                    chat_id=user_id,
-                    text=f"✅ Вы успешно вывели средства. Сумма: {amount}."
-                )
-            except Exception as e:
-                logger.error(f"❌ Ошибка при отправке уведомления пользователю {user_id}: {e}")
+                bot.send_message(user_id, f"✅ Спасибо! Ваш депозит на сумму {amount} успешно зачислен. Теперь вы можете получать сигналы.")
 
         # Отправляем успешный ответ
         return jsonify({"status": "success"}), 200
