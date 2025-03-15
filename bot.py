@@ -5,6 +5,7 @@ import time
 import threading
 import logging
 from flask import Flask, request
+from waitress import serve  # Импортируем Waitress
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -236,12 +237,12 @@ def webhook():
 def favicon():
     return '', 204  # Пустой ответ без ошибок
 
-# Запуск Flask
+# Запуск приложения с использованием Waitress
 if __name__ == '__main__':
     # Устанавливаем webhook
     bot.remove_webhook()
     bot.set_webhook(url="https://bot-d92o.onrender.com/webhook")
     
-    # Запускаем Flask на порту, указанном в переменной окружения PORT
+    # Запускаем Waitress на порту, указанном в переменной окружения PORT
     port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=port)
+    serve(app, host='0.0.0.0', port=port)  # Используем Waitress вместо app.run
