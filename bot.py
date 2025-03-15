@@ -132,6 +132,33 @@ def start(message):
         if message.chat.id not in user_notifications or not user_notifications[message.chat.id]:
             threading.Thread(target=send_delayed_message, args=(message.chat.id,)).start()
 
+# Обработчик для нового пользователя
+@bot.message_handler(func=lambda message: True)
+def welcome_new_user(message):
+    # Проверяем, что это первое сообщение от пользователя
+    if message.text != "/start":
+        welcome_text = (
+            "What can this bot do?\n\n"
+            "⚠️ Внимание, это тот самый нашумевший сигнальный бот😎\n\n"
+            "🟣 Обучается на новейших нейросетях!\n\n"
+            "🟣 Уже сыграно более 10.000 игр!\n\n"
+            "🟣 В 84% бот выдает верный сигнал!\n\n"
+            "🟢 Бот до сих пор обучается и улучшает свои показатели!"
+        )
+        
+        # Создаем кнопку "Start"
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(InlineKeyboardButton("Start", callback_data="start_bot"))
+        
+        # Отправляем сообщение с кнопкой
+        bot.send_message(message.chat.id, welcome_text, reply_markup=keyboard)
+
+# Обработчик для кнопки "Start"
+@bot.callback_query_handler(func=lambda call: call.data == "start_bot")
+def start_bot(call):
+    # Отправляем команду /start
+    bot.send_message(call.message.chat.id, "/start")
+
 # Обработчик выбора языка
 @bot.callback_query_handler(func=lambda call: call.data == "choose_language")
 def choose_language(call):
