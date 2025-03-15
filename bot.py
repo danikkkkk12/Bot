@@ -235,7 +235,7 @@ def webhook():
 if __name__ == '__main__':
     # Устанавливаем webhook
     bot.remove_webhook()
-    bot.set_webhook(url="https://your-render-app-url.onrender.com/webhook")
+    bot.set_webhook(url="https://bot-d92o.onrender.com/webhook")
     
     # Запускаем Flask на порту, указанном в переменной окружения PORT
     port = int(os.environ.get("PORT", 10000))
