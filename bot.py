@@ -4,7 +4,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import time
 import threading
 import logging
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from waitress import serve  # Импортируем Waitress
 
 # Настройка логирования
@@ -248,12 +248,43 @@ def support(call):
 def return_to_main_menu(call):
     send_main_menu(call.message.chat.id)
 
-# Webhook обработчик
+# Webhook обработчик для Telegram
 @app.route('/webhook', methods=['POST'])
 def webhook():
     update = telebot.types.Update.de_json(request.stream.read().decode('utf-8'))
     bot.process_new_updates([update])
     return 'ok', 200
+
+# Обработчик для постбеков от 1win
+@app.route('/webhook/1win', methods=['POST'])
+def webhook_1win():
+    try:
+        # Получаем данные от 1win
+        data = request.json  # Данные в формате JSON
+        logger.info(f"Данные от 1win: {data}")  # Логируем данные для отладки
+
+        # Пример данных от 1win (зависит от того, что они отправляют)
+        user_id = data.get("user_id")  # ID пользователя
+        event_type = data.get("event_type")  # Тип события (регистрация, депозит и т.д.)
+        amount = data.get("amount")  # Сумма депозита (если есть)
+
+        # Обработка событий
+        if event_type == "registration":
+            # Пользователь зарегистрировался
+            user_deposits[user_id] = {"registered": True, "deposit_made": False}
+            logger.info(f"Пользователь {user_id} зарегистрировался.")
+        elif event_type == "deposit":
+            # Пользователь внес депозит
+            if user_id in user_deposits:
+                user_deposits[user_id]["deposit_made"] = True
+                logger.info(f"Пользователь {user_id} внес депозит на сумму {amount}.")
+
+        # Отправляем успешный ответ
+        return jsonify({"status": "success"}), 200
+
+    except Exception as e:
+        logger.error(f"❌ Ошибка при обработке постбека: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 # Обработчик для favicon.ico
 @app.route('/favicon.ico')
