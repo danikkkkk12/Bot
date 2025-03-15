@@ -231,6 +231,11 @@ def webhook():
     bot.process_new_updates([update])
     return 'ok', 200
 
+# Обработчик для favicon.ico
+@app.route('/favicon.ico')
+def favicon():
+    return '', 204  # Пустой ответ без ошибок
+
 # Запуск Flask
 if __name__ == '__main__':
     # Устанавливаем webhook
