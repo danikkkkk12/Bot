@@ -54,14 +54,16 @@ async def main():
     app = web.Application()
     app.router.add_post(WEBHOOK_PATH, handle)
 
-    # Запуск веб-сервера
+    # Запуск веб-сервера в текущем цикле
     port = int(os.getenv("PORT", 10000))
     logger.info(f"Listening on port {port}...")
 
-    # Запускаем сервер внутри текущего цикла событий
-    await web.run_app(app, host='0.0.0.0', port=port)
+    # Запуск через make_handler(), который совместим с текущим циклом событий
+    handler = app.make_handler()
+    await loop.create_server(handler, '0.0.0.0', port)
 
 if __name__ == '__main__':
-    # Запуск main без asyncio.run(), так как сервер и бот работают в одном цикле событий
-    asyncio.get_event_loop().run_until_complete(main())
+    # Используем текущий цикл событий
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
 
