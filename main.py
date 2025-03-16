@@ -22,21 +22,17 @@ async def handle(request):
     """
     Обработчик входящих вебхуков.
     """
-    # Получаем экземпляр Dispatcher из контекста приложения
-    dp = request.app['dp']
+    dp = request.app['dp']  # Получаем Dispatcher из контекста
     json_str = await request.json()
     update = Update(**json_str)
-    await dp.process_update(update)
+    await dp.feed_update(update)  # Используем feed_update
     return web.Response()
 
 async def on_startup(bot: Bot):
     """
     Действия при запуске бота.
     """
-    # Убираем старый webhook, если был
     await bot.delete_webhook(drop_pending_updates=True)
-
-    # Настраиваем вебхук
     await bot.set_webhook(WEBHOOK_URL)
     logger.info(f"Webhook set to {WEBHOOK_URL}")
 
@@ -50,47 +46,35 @@ async def main():
     )
     logger.info("Starting bot...")
 
-    # Инициализация бота и диспетчера
     bot = Bot(BOT_TOKEN)
     dp = Dispatcher()
-
-    # Регистрируем роутеры
     dp.include_routers(client_router, admin_router)
-
-    # Регистрируем startup-функцию
     dp.startup.register(on_startup)
     dp.startup.register(DataBase.on_startup)
 
-    # Создаём веб-приложение
     app = web.Application()
     app['dp'] = dp  # Передаём Dispatcher в контекст приложения
     app.router.add_post(WEBHOOK_PATH, handle)
 
-    # Запуск с использованием AppRunner
     runner = AppRunner(app)
     await runner.setup()
 
-    # Устанавливаем порт для Render
-    port = int(os.getenv("PORT", 10000))  # Используем порт из переменной окружения
+    port = int(os.getenv("PORT", 10000))
     logger.info(f"Listening on port {port}...")
 
-    # Запускаем сервер
     site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
 
-    # Бесконечный цикл для поддержания работы сервера
     try:
         while True:
-            await asyncio.sleep(3600)  # Спим, чтобы не завершать цикл
+            await asyncio.sleep(3600)
     except asyncio.CancelledError:
         logger.info("Shutting down...")
     finally:
-        # Закрываем ресурсы
         await bot.session.close()
         await runner.cleanup()
 
 if __name__ == '__main__':
-    # Используем текущий цикл событий
     loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(main())
@@ -98,5 +82,4 @@ if __name__ == '__main__':
         logger.info("Bot stopped by user.")
     finally:
         loop.close()
-
 
