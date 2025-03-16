@@ -1,16 +1,14 @@
 import asyncio
 import logging
+import os
 
 from aiogram import Dispatcher, Bot
-
 from config import BOT_TOKEN
 from handlers.client import router as client_router
 from handlers.admin import router as admin_router
 from database.db import DataBase
 
-
 logger = logging.getLogger(__name__)
-
 
 async def main():
     logging.basicConfig(
@@ -26,8 +24,11 @@ async def main():
     dp.startup.register(DataBase.on_startup)
     await bot.delete_webhook(drop_pending_updates=True)
 
-    await dp.start_polling(bot)
+    # Указываем порт для Render
+    port = int(os.getenv("PORT", 8080))
+    logger.info(f"Listening on port {port}...")
 
+    await dp.start_polling(bot)
 
 if __name__ == '__main__':
     asyncio.run(main())
