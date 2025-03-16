@@ -25,7 +25,7 @@ async def main():
     await bot.delete_webhook(drop_pending_updates=True)
 
     # Указываем порт для Render
-    port = int(os.getenv("PORT", 8080))
+    port = int(os.getenv("PORT", 10000))
     logger.info(f"Listening on port {port}...")
 
     await dp.start_polling(bot)
