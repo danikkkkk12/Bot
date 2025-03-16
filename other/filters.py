@@ -1,9 +1,12 @@
 from typing import Any
 from aiogram.filters import BaseFilter
-from aiogram import types, Bot, F
+from aiogram import types, Bot, F, Router  # Добавляем Router
 from aiogram.types import ChatMember, InlineKeyboardMarkup, InlineKeyboardButton
 from config import CHANNEL_ID
 from database.db import DataBase
+
+# Создаём экземпляр Router
+router = Router()
 
 class ChatJoinFilter(BaseFilter):
     """
