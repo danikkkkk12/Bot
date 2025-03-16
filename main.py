@@ -58,8 +58,10 @@ async def main():
     port = int(os.getenv("PORT", 10000))
     logger.info(f"Listening on port {port}...")
 
-    # Запуск сервера
-    web.run_app(app, host='0.0.0.0', port=port)
+    # Запускаем сервер внутри текущего цикла событий
+    await web.run_app(app, host='0.0.0.0', port=port)
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    # Запуск main без asyncio.run(), так как сервер и бот работают в одном цикле событий
+    asyncio.get_event_loop().run_until_complete(main())
+
