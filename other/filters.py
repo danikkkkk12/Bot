@@ -1,6 +1,7 @@
+import asyncio
 from typing import Any
 from aiogram.filters import BaseFilter
-from aiogram import types, Bot, F, Router  # Добавляем Router
+from aiogram import types, Bot, F, Router
 from aiogram.types import ChatMember, InlineKeyboardMarkup, InlineKeyboardButton
 from config import CHANNEL_ID
 from database.db import DataBase
@@ -68,6 +69,9 @@ async def check_subscription_handler(callback: types.CallbackQuery, bot: Bot):
     Отправляет уведомление о статусе подписки.
     """
     try:
+        # Добавляем небольшую задержку для обновления статуса
+        await asyncio.sleep(2)  # Задержка 2 секунды
+
         # Проверяем статус подписки
         chat_member = await bot.get_chat_member(chat_id=CHANNEL_ID, user_id=callback.from_user.id)
 
