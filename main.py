@@ -22,6 +22,8 @@ async def handle(request):
     """
     Обработчик входящих вебхуков.
     """
+    # Получаем экземпляр Dispatcher из контекста приложения
+    dp = request.app['dp']
     json_str = await request.json()
     update = Update(**json_str)
     await dp.process_update(update)
@@ -61,6 +63,7 @@ async def main():
 
     # Создаём веб-приложение
     app = web.Application()
+    app['dp'] = dp  # Передаём Dispatcher в контекст приложения
     app.router.add_post(WEBHOOK_PATH, handle)
 
     # Запуск с использованием AppRunner
@@ -68,7 +71,7 @@ async def main():
     await runner.setup()
 
     # Устанавливаем порт для Render
-    port = int(os.getenv("PORT", 10000))
+    port = int(os.getenv("PORT", 10000))  # Используем порт из переменной окружения
     logger.info(f"Listening on port {port}...")
 
     # Запускаем сервер

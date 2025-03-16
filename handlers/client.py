@@ -31,7 +31,7 @@ class ChangeReferral(StatesGroup):
 
 @router.message(CommandStart())
 async def start_command(message: types.Message, user_id: int = 0):
-    await message.delete()
+
     user = await DataBase.get_user_info(message.from_user.id if user_id == 0 else user_id)
     if user is None:
         await get_language(message, True)
