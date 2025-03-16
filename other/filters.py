@@ -1,7 +1,8 @@
 from typing import Any
 from aiogram.filters import BaseFilter
 from aiogram import types, Bot
-from aiogram.types import ChatMemberStatus  # Импортируем ChatMemberStatus
+from aiogram.types import ChatMember
+
 
 from config import CHANNEL_ID
 from database.db import DataBase
@@ -14,7 +15,7 @@ class ChatJoinFilter(BaseFilter):
             chat_member = await bot.get_chat_member(chat_id=CHANNEL_ID, user_id=message.from_user.id)
 
             # Проверяем статус пользователя
-            if chat_member.status in [ChatMemberStatus.MEMBER, ChatMemberStatus.CREATOR, ChatMemberStatus.ADMINISTRATOR]:
+            if chat_member.status in [ChatMember.Status.MEMBER, ChatMember.Status.CREATOR, ChatMember.Status.ADMINISTRATOR]:
                 return True
 
         except Exception as e:
