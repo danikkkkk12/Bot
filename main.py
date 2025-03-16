@@ -7,10 +7,12 @@ from aiogram.types import Update
 from aiohttp import web
 from aiohttp.web_runner import AppRunner
 from config import BOT_TOKEN
-from handlers.client import router as client_router
-from handlers.admin import router as admin_router
+from handlers.client import router as client_router  # Импортируем роутер из client.py
+from handlers.admin import router as admin_router    # Импортируем роутер из admin.py
+from other.filters import router as filters_router  # Импортируем роутер из filters.py
 from database.db import DataBase
 
+# Настройка логирования
 logger = logging.getLogger(__name__)
 
 # Вебхук URL и путь
@@ -33,48 +35,78 @@ async def on_startup(bot: Bot):
     """
     Действия при запуске бота.
     """
-    await bot.delete_webhook(drop_pending_updates=True)
-    await bot.set_webhook(WEBHOOK_URL)
-    logger.info(f"Webhook set to {WEBHOOK_URL}")
+    try:
+        await bot.delete_webhook(drop_pending_updates=True)
+        await bot.set_webhook(WEBHOOK_URL)
+        logger.info(f"Webhook set to {WEBHOOK_URL}")
+    except Exception as e:
+        logger.error(f"Ошибка при настройке вебхука: {e}")
+
+async def on_shutdown(bot: Bot, runner: AppRunner):
+    """
+    Действия при завершении работы бота.
+    """
+    try:
+        await bot.session.close()
+        await runner.cleanup()
+        logger.info("Bot shutdown completed.")
+    except Exception as e:
+        logger.error(f"Ошибка при завершении работы бота: {e}")
 
 async def main():
     """
     Основная функция для запуска бота и веб-сервера.
     """
+    # Настройка логирования
     logging.basicConfig(
         level=logging.INFO,
         format=f'[BOT] {u"%(filename)s:%(lineno)d #%(levelname)-8s [%(asctime)s] - %(name)s - %(message)s"}'
     )
     logger.info("Starting bot...")
 
-    bot = Bot(BOT_TOKEN)
-    dp = Dispatcher()
-    dp.include_routers(client_router, admin_router)  # Добавляем роутеры
-    dp.startup.register(on_startup)
-    dp.startup.register(DataBase.on_startup)
-
-    app = web.Application()
-    app['dp'] = dp  # Передаём Dispatcher в контекст приложения
-    app['bot'] = bot  # Передаём Bot в контекст приложения
-    app.router.add_post(WEBHOOK_PATH, handle)
-
-    runner = AppRunner(app)
-    await runner.setup()
-
-    port = int(os.getenv("PORT", 10000))
-    logger.info(f"Listening on port {port}...")
-
-    site = web.TCPSite(runner, '0.0.0.0', port)
-    await site.start()
-
     try:
+        # Инициализация бота и диспетчера
+        bot = Bot(BOT_TOKEN)
+        dp = Dispatcher()
+
+        # Подключаем роутеры
+        dp.include_routers(
+            client_router,  # Роутер из client.py
+            admin_router,   # Роутер из admin.py
+            filters_router  # Роутер из filters.py
+        )
+
+        # Регистрируем startup-функции
+        dp.startup.register(on_startup)
+        dp.startup.register(DataBase.on_startup)
+
+        # Создаём веб-приложение
+        app = web.Application()
+        app['dp'] = dp  # Передаём Dispatcher в контекст приложения
+        app['bot'] = bot  # Передаём Bot в контекст приложения
+        app.router.add_post(WEBHOOK_PATH, handle)
+
+        # Запуск веб-сервера
+        runner = AppRunner(app)
+        await runner.setup()
+
+        port = int(os.getenv("PORT", 10000))
+        logger.info(f"Listening on port {port}...")
+
+        site = web.TCPSite(runner, '0.0.0.0', port)
+        await site.start()
+
+        # Бесконечный цикл для поддержания работы сервера
         while True:
             await asyncio.sleep(3600)
+
     except asyncio.CancelledError:
         logger.info("Shutting down...")
+    except Exception as e:
+        logger.error(f"Ошибка при запуске бота: {e}")
     finally:
-        await bot.session.close()
-        await runner.cleanup()
+        # Завершение работы бота
+        await on_shutdown(bot, runner)
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
