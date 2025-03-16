@@ -23,9 +23,10 @@ async def handle(request):
     Обработчик входящих вебхуков.
     """
     dp = request.app['dp']  # Получаем Dispatcher из контекста
+    bot = request.app['bot']  # Получаем Bot из контекста
     json_str = await request.json()
     update = Update(**json_str)
-    await dp.feed_update(update)  # Используем feed_update
+    await dp.feed_update(bot, update)  # Передаём bot и update
     return web.Response()
 
 async def on_startup(bot: Bot):
@@ -48,12 +49,13 @@ async def main():
 
     bot = Bot(BOT_TOKEN)
     dp = Dispatcher()
-    dp.include_routers(client_router, admin_router)
+    dp.include_routers(client_router, admin_router)  # Добавляем роутеры
     dp.startup.register(on_startup)
     dp.startup.register(DataBase.on_startup)
 
     app = web.Application()
     app['dp'] = dp  # Передаём Dispatcher в контекст приложения
+    app['bot'] = bot  # Передаём Bot в контекст приложения
     app.router.add_post(WEBHOOK_PATH, handle)
 
     runner = AppRunner(app)
@@ -82,4 +84,3 @@ if __name__ == '__main__':
         logger.info("Bot stopped by user.")
     finally:
         loop.close()
-
