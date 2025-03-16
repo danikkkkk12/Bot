@@ -3,3 +3,4 @@ pyTelegramBotAPI
 requests
 Pillow
 waitress
+aiogram==3.0.0b7
