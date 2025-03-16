@@ -4,7 +4,8 @@ import os
 
 from aiogram import Dispatcher, Bot
 from aiogram.types import Update
-from aiohttp import web
+from aiohttp import web, ClientSession
+from aiohttp.web_runner import AppRunner
 from config import BOT_TOKEN
 from handlers.client import router as client_router
 from handlers.admin import router as admin_router
@@ -16,13 +17,6 @@ logger = logging.getLogger(__name__)
 WEBHOOK_HOST = 'https://bot-d92o.onrender.com'  # Замени на твой домен с HTTPS
 WEBHOOK_PATH = '/webhook'  # Путь для обработки вебхуков
 WEBHOOK_URL = WEBHOOK_HOST + WEBHOOK_PATH
-
-async def on_start(msg):
-    await msg.reply("Привет! Я работаю через вебхук!")
-
-async def on_start_webhook(dp):
-    # Устанавливаем вебхук
-    await bot.set_webhook(WEBHOOK_URL)
 
 async def handle(request):
     json_str = await request.json()
@@ -54,16 +48,21 @@ async def main():
     app = web.Application()
     app.router.add_post(WEBHOOK_PATH, handle)
 
-    # Запуск веб-сервера в текущем цикле
+    # Запуск с использованием AppRunner (новый способ)
+    runner = AppRunner(app)
+    await runner.setup()
+    
+    # Устанавливаем порт для Render
     port = int(os.getenv("PORT", 10000))
     logger.info(f"Listening on port {port}...")
 
-    # Запуск через make_handler(), который совместим с текущим циклом событий
-    handler = app.make_handler()
-    await loop.create_server(handler, '0.0.0.0', port)
+    # Запускаем сервер
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
 
 if __name__ == '__main__':
     # Используем текущий цикл событий
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
+
 
