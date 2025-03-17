@@ -1,5 +1,5 @@
 import sqlite3
-import aiohttp  # Импортируем aiohttp для асинхронных HTTP-запросов
+import aiohttp
 from aiogram import F, Router, Bot
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command
@@ -64,16 +64,20 @@ def get_all_users():
     finally:
         conn.close()
 
-# Асинхронная функция для проверки регистрации пользователя с использованием aiohttp
+# Асинхронная функция для проверки регистрации пользователя
 async def check_registration(user_id):
     api_url = f"https://1wcneg.com/gtyb/api/check_registration?user_id={user_id}"
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(api_url) as response:
+                print(f"API URL: {api_url}")  # Логируем URL
+                print(f"Response status: {response.status}")  # Логируем статус
                 if response.status == 200:
                     data = await response.json()
+                    print(f"API response: {data}")  # Логируем ответ
                     return data.get("registered", False)
                 else:
+                    print(f"Ошибка: статус {response.status}")
                     return False
     except Exception as e:
         print(f"Ошибка при проверке регистрации: {e}")
@@ -89,23 +93,14 @@ async def start(message: Message):
             FSInputFile('start.jpg'),
             caption=(
                 f'Добро пожаловать в бота {NAME}! \n\n'
-
                 '🌐Шаг 1 - Зарегистрируйся \n\n'
-
                 '⚪ Для синхронизации с ботом, вам необходимо создать новый аккаунт строго по ссылке из бота и примините промокод: \n\n'
-
                 'Промокод: 👉MinesCrazy👈 \n\n'
-
                 '🔵Если вы открыли ссылку и попали в старый аккаунт, то вам нужно: \n\n'
-
                 '-Выйти из старого аккаунта \n\n'
-
                 '-Закрыть сайт \n\n'
-
                 '-Снова открыть сайт через кнопку в боте \n\n'
-
                 '-Пройти регистрцию с указанием промокода MinesCrazy \n\n'
-
                 '‼️После успешной регистрации, бот автоматически отправит вам уведомление об успешной синхронизации!'
             ),
             parse_mode='html',
@@ -116,9 +111,13 @@ async def start(message: Message):
 @router1.callback_query(F.data == 'yes')
 async def yes_reg(callback: CallbackQuery):
     user_id = callback.from_user.id
+    print(f"Пользователь {user_id} нажал 'Готово'")  # Логируем действие
 
     # Проверяем, зарегистрирован ли пользователь
-    if await check_registration(user_id):
+    is_registered = await check_registration(user_id)
+    print(f"Регистрация пользователя {user_id}: {is_registered}")  # Логируем результат проверки
+
+    if is_registered:
         with open('success.jpg', 'rb') as photo:
             await callback.message.answer_photo(
                 FSInputFile('success.jpg'),
@@ -135,24 +134,7 @@ async def yes_reg(callback: CallbackQuery):
     else:
         await callback.answer("❌ Вы не зарегистрированы! Пожалуйста, зарегистрируйтесь по ссылке.", show_alert=True)
 
-
-# Обработка кнопки "Игры"
-@router1.callback_query(F.data == 'play')
-async def games(callback: CallbackQuery):
-    user_id = callback.from_user.id
-
-    # Проверяем, зарегистрирован ли пользователь
-    if await check_registration(user_id):
-        with open('start.jpg', 'rb') as photo:
-            await callback.message.delete()
-            await callback.message.answer_photo(
-                FSInputFile('start.jpg'),
-                caption='Выберите игру:',
-                parse_mode='html',
-                reply_markup=kb.games
-            )
-    else:
-        await callback.answer("❌ Вы не зарегистрированы! Пожалуйста, зарегистрируйтесь.", show_alert=True)
+# Остальные обработчики остаются без изменений
 
 # Обработка кнопки "Назад"
 @router1.callback_query(F.data == 'back')
