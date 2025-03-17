@@ -3,9 +3,14 @@ import logging
 import os
 from aiogram import Bot, Dispatcher
 from aiogram.types import Update
+from aiogram.exceptions import TelegramRetryAfter
 from aiohttp import web
 from app.handlers import router1
 from config import TOKEN
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Вебхук настройки
 WEBHOOK_HOST = 'https://bot-d92o.onrender.com'  # Замени на свой хост
@@ -27,9 +32,23 @@ async def on_startup(bot: Bot):
     """
     Установка вебхука при старте.
     """
-    await bot.delete_webhook(drop_pending_updates=True)
-    await bot.set_webhook(WEBHOOK_URL)
-    print(f"Webhook установлен на {WEBHOOK_URL}")
+    try:
+        # Удаляем старый вебхук и отключаем обработку ожидающих обновлений
+        await bot.delete_webhook(drop_pending_updates=True)
+        
+        # Добавляем задержку перед установкой вебхука
+        await asyncio.sleep(1)
+        
+        # Устанавливаем новый вебхук
+        await bot.set_webhook(WEBHOOK_URL)
+        logger.info(f"Webhook установлен на {WEBHOOK_URL}")
+    except TelegramRetryAfter as e:
+        # Обработка ошибки "Too Many Requests"
+        logger.warning(f"Ошибка: {e}. Повторная попытка через {e.retry_after} секунд.")
+        await asyncio.sleep(e.retry_after)
+        await on_startup(bot)
+    except Exception as e:
+        logger.error(f"Ошибка при установке вебхука: {e}")
 
 async def main():
     bot = Bot(token=TOKEN)
@@ -52,7 +71,9 @@ async def main():
     site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
 
-    print(f"Бот запущен на порту {port}...")
+    logger.info(f"Бот запущен на порту {port}...")
+    
+    # Бесконечный цикл для поддержания работы бота
     while True:
         await asyncio.sleep(3600)
 
@@ -60,4 +81,4 @@ if __name__ == '__main__':
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print('Bye Bye')
+        logger.info('Bye Bye')
