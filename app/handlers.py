@@ -1,5 +1,6 @@
 import sqlite3
 import aiohttp
+import asyncio
 from aiogram import F, Router, Bot
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command
@@ -18,7 +19,8 @@ def setup_database():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER UNIQUE
+            user_id INTEGER UNIQUE,
+            is_registered BOOLEAN DEFAULT FALSE
         )
     ''')
     conn.commit()
@@ -47,20 +49,29 @@ def add_user(user_id):
     finally:
         conn.close()
 
-# Получение всех пользователей
-def get_all_users():
+# Обновление статуса регистрации пользователя
+def update_user_registration(user_id, is_registered):
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
     try:
-        conn = sqlite3.connect('users.db')
-        cursor = conn.cursor()
-        cursor.execute("SELECT user_id FROM users")
-        users = [row[0] for row in cursor.fetchall()]
-        return users
-    except sqlite3.OperationalError as e:
-        print(f"Ошибка при работе с базой данных: {e}")
-        return []
+        cursor.execute("UPDATE users SET is_registered = ? WHERE user_id = ?", (is_registered, user_id))
+        conn.commit()
     except Exception as e:
-        print(f"Непредвиденная ошибка: {e}")
-        return []
+        print(f"Ошибка при обновлении статуса регистрации: {e}")
+    finally:
+        conn.close()
+
+# Получение статуса регистрации пользователя
+def get_user_registration_status(user_id):
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT is_registered FROM users WHERE user_id = ?", (user_id,))
+        result = cursor.fetchone()
+        return result[0] if result else False
+    except Exception as e:
+        print(f"Ошибка при получении статуса регистрации: {e}")
+        return False
     finally:
         conn.close()
 
@@ -82,6 +93,38 @@ async def check_registration(user_id):
     except Exception as e:
         print(f"Ошибка при проверке регистрации: {e}")
         return False
+
+# Функция для периодической проверки регистрации
+async def check_registration_periodically(bot: Bot):
+    while True:
+        try:
+            conn = sqlite3.connect('users.db')
+            cursor = conn.cursor()
+            cursor.execute("SELECT user_id FROM users WHERE is_registered = FALSE")
+            users = [row[0] for row in cursor.fetchall()]
+            for user_id in users:
+                is_registered = await check_registration(user_id)
+                if is_registered:
+                    update_user_registration(user_id, True)
+                    with open('success.jpg', 'rb') as photo:
+                        await bot.send_photo(
+                            user_id,
+                            FSInputFile('success.jpg'),
+                            caption=(
+                                "✅ Вы успешно завершили регистрацию. Ваш аккаунт синхронизирован с ботом.\n\n"
+                                "🌐Шаг 2 - Внеси первый депозит\n\n"
+                                "⚪Чтобы бот открыл вам доступ к сигналам, пополните свой счет (сделайте депозит) любым удобным вам способом.\n\n"
+                                "🌟*Чем больше депозит, тем больше УРОВЕНЬ в боте, а чем больше уровень в боте, тем большее количество сигналов с высокой вероятностью проходимости сигнала ты будешь получать.*\n\n"
+                                "‼️После пополнения первого депозита, Вам автоматически придет уведомление в бота и откроется доступ к сигналам."
+                            ),
+                            parse_mode='Markdown',
+                            reply_markup=kb.regget
+                        )
+        except Exception as e:
+            print(f"Ошибка при периодической проверке регистрации: {e}")
+        finally:
+            conn.close()
+        await asyncio.sleep(60)  # Проверяем каждую минуту
 
 # Команда /start
 @router1.message(CommandStart())
@@ -107,6 +150,11 @@ async def start(message: Message):
             reply_markup=kb.reg
         )
 
+# Запуск периодической проверки
+@router1.startup()
+async def on_startup(bot: Bot):
+    asyncio.create_task(check_registration_periodically(bot))
+
 # Обработка кнопки "Регистрация прошла успешно"
 @router1.callback_query(F.data == 'yes')
 async def yes_reg(callback: CallbackQuery):
@@ -118,6 +166,7 @@ async def yes_reg(callback: CallbackQuery):
     print(f"Регистрация пользователя {user_id}: {is_registered}")  # Логируем результат проверки
 
     if is_registered:
+        update_user_registration(user_id, True)
         with open('success.jpg', 'rb') as photo:
             await callback.message.answer_photo(
                 FSInputFile('success.jpg'),
@@ -133,8 +182,6 @@ async def yes_reg(callback: CallbackQuery):
             )
     else:
         await callback.answer("❌ Вы не зарегистрированы! Пожалуйста, зарегистрируйтесь по ссылке.", show_alert=True)
-
-# Остальные обработчики остаются без изменений
 
 # Обработка кнопки "Назад"
 @router1.callback_query(F.data == 'back')

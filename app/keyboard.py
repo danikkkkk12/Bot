@@ -4,7 +4,7 @@ from config import *
 # Клавиатура для регистрации
 reg = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='📝 Регистрация', url=REF)],
-    [InlineKeyboardButton(text='✅ Готово', callback_data='yes')]
+    [InlineKeyboardButton(text='🆘 Помощь', url=SUPPORT_LINK)]
 ])
 
 # Клавиатура для депозита после регистрации
