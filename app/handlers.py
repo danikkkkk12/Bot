@@ -183,6 +183,8 @@ async def yes_reg(callback: CallbackQuery):
     else:
         await callback.answer("❌ Вы не зарегистрированы! Пожалуйста, зарегистрируйтесь по ссылке.", show_alert=True)
 
+
+
 # Обработка кнопки "Назад"
 @router1.callback_query(F.data == 'back')
 async def back(callback: CallbackQuery):

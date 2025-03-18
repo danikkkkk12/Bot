@@ -1,12 +1,11 @@
 import asyncio
 import logging
 import os
-from aiogram import Bot, Dispatcher
-from aiogram.types import Update
+from aiogram import Bot, Dispatcher, types
 from aiogram.exceptions import TelegramRetryAfter
 from aiohttp import web
-from app.handlers import router1
-from config import TOKEN
+from app.handlers import router1  # Импортируем роутер
+from config import TOKEN  # Импортируем токен бота
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -17,16 +16,55 @@ WEBHOOK_HOST = 'https://bot-d92o.onrender.com'  # Замени на свой х�
 WEBHOOK_PATH = '/webhook'
 WEBHOOK_URL = f'{WEBHOOK_HOST}{WEBHOOK_PATH}'
 
-async def handle(request):
+# ID чата для уведомлений (замени на свой)
+
+async def handle_webhook(request):
     """
-    Обработчик входящих вебхуков.
+    Обработчик входящих вебхуков от Telegram.
     """
     dp = request.app['dp']
     bot = request.app['bot']
-    json_str = await request.json()
-    update = Update(**json_str)
-    await dp.feed_update(bot, update)
-    return web.Response()
+    try:
+        json_str = await request.json()
+        update = types.Update(**json_str)
+        await dp.feed_update(bot, update)
+        return web.Response()
+    except Exception as e:
+        logger.error(f"Ошибка при обработке вебхука: {e}")
+        return web.Response(status=500)
+
+async def handle_postback(request):
+    """
+    Обработчик входящих постбеков от партнёрки.
+    """
+    bot = request.app['bot']
+    try:
+        # Получаем данные из GET-запроса (или POST, если нужно)
+        data = request.query  # Для GET-запросов
+        # Если данные в JSON (POST), используй: data = await request.json()
+
+        # Логируем данные
+        logger.info(f"Received postback data: {data}")
+
+        # Пример обработки данных
+        action = data.get('action')
+        user_id = data.get('user_id')
+        amount = data.get('amount')
+
+        if action == 'registration':
+            message = f"🎉 Новая регистрация!\nUser ID: {user_id}"
+            await bot.send_message(ADMIN_ID, message)
+
+        elif action == 'deposit':
+            message = f"💰 Новый депозит!\nUser ID: {user_id}\nAmount: {amount}"
+            await bot.send_message(ADMIN_ID, message)
+
+        # Отвечаем партнёрке, что всё ок
+        return web.json_response({"status": "ok"})
+
+    except Exception as e:
+        logger.error(f"Ошибка при обработке постбека: {e}")
+        return web.json_response({"status": "error", "message": str(e)}, status=500)
 
 async def on_startup(bot: Bot):
     """
@@ -51,9 +89,10 @@ async def on_startup(bot: Bot):
         logger.error(f"Ошибка при установке вебхука: {e}")
 
 async def main():
+    # Инициализация бота и диспетчера
     bot = Bot(token=TOKEN)
     dp = Dispatcher()
-    dp.include_router(router1)
+    dp.include_router(router1)  # Подключаем роутер
 
     # Устанавливаем вебхук при старте
     await on_startup(bot)
@@ -62,12 +101,16 @@ async def main():
     app = web.Application()
     app['dp'] = dp
     app['bot'] = bot
-    app.router.add_post(WEBHOOK_PATH, handle)
+
+    # Добавляем обработчики
+    app.router.add_post(WEBHOOK_PATH, handle_webhook)  # Для вебхуков Telegram
+    app.router.add_get('/postback', handle_postback)  # Для постбеков от партнёрки
+    app.router.add_post('/postback', handle_postback)  # Если партнёрка отправляет POST
 
     # Запуск веб-сервера
     runner = web.AppRunner(app)
     await runner.setup()
-    port = int(os.getenv('PORT', 10000))
+    port = int(os.getenv('PORT', 10000))  # Порт для Render
     site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
 
