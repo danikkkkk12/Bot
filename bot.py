@@ -47,27 +47,39 @@ async def handle_postback(request):
         # Логируем все данные
         logger.info(f"Received postback data: {dict(data)}")
 
+        # Функция для преобразования 'null' в None
+        def parse_value(value):
+            return None if value == 'null' else value
+
         # Пример обработки данных
         action = data.get('action', 'unknown')
-        user_id = data.get('user_id')
+        user_id = parse_value(data.get('user_id'))
+        country = data.get('country')
+        sub1 = parse_value(data.get('sub1'))
+        sub2 = parse_value(data.get('sub2'))
+        sub3 = parse_value(data.get('sub3'))
+        sub4 = parse_value(data.get('sub4'))
         amount = data.get('amount', 0)
-
-        # Обработка строки 'null'
-        if user_id == 'null':
-            user_id = None
 
         # Логируем каждое поле
         logger.info(f"Action: {action}")
         logger.info(f"User ID: {user_id}")
+        logger.info(f"Country: {country}")
+        logger.info(f"Sub1: {sub1}")
+        logger.info(f"Sub2: {sub2}")
+        logger.info(f"Sub3: {sub3}")
+        logger.info(f"Sub4: {sub4}")
         logger.info(f"Amount: {amount}")
 
         if action == 'registration':
-            message = f"🎉 Новая регистрация!\nUser ID: {user_id}"
+            message = f"🎉 Новая регистрация!\nUser ID: {user_id}\nCountry: {country}"
             await bot.send_message(ADMIN_CHAT_ID, message)
+            logger.info(f"Уведомление отправлено в чат администратора: {message}")
 
         elif action == 'deposit':
             message = f"💰 Новый депозит!\nUser ID: {user_id}\nAmount: {amount}"
             await bot.send_message(ADMIN_CHAT_ID, message)
+            logger.info(f"Уведомление отправлено в чат администратора: {message}")
 
         # Отвечаем партнёрке, что всё ок
         return web.json_response({"status": "ok"})
