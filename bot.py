@@ -10,7 +10,8 @@ from config import TOKEN  # Импортируем токен бота
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
+# ID чата для уведомлений (замени на свой)
+ADMIN_CHAT_ID = -1002616661905  # Узнать можно через @userinfobot
 # Вебхук настройки
 WEBHOOK_HOST = 'https://bot-d92o.onrender.com'  # Замени на свой хост
 WEBHOOK_PATH = '/webhook'
@@ -34,30 +35,37 @@ async def handle_webhook(request):
         return web.Response(status=500)
 
 async def handle_postback(request):
-    """
-    Обработчик входящих постбеков от партнёрки.
-    """
     bot = request.app['bot']
     try:
-        # Получаем данные из GET-запроса (или POST, если нужно)
-        data = request.query  # Для GET-запросов
-        # Если данные в JSON (POST), используй: data = await request.json()
+        # Логируем метод запроса (GET или POST)
+        logger.info(f"Request method: {request.method}")
 
-        # Логируем данные
-        logger.info(f"Received postback data: {data}")
+        # Получаем данные в зависимости от метода
+        if request.method == 'GET':
+            data = request.query  # Для GET-запросов
+        else:
+            data = await request.post()  # Для POST-запросов
+
+        # Логируем все данные
+        logger.info(f"Received postback data: {dict(data)}")
 
         # Пример обработки данных
         action = data.get('action')
         user_id = data.get('user_id')
         amount = data.get('amount')
 
+        # Логируем каждое поле
+        logger.info(f"Action: {action}")
+        logger.info(f"User ID: {user_id}")
+        logger.info(f"Amount: {amount}")
+
         if action == 'registration':
             message = f"🎉 Новая регистрация!\nUser ID: {user_id}"
-            await bot.send_message(ADMIN_ID, message)
+            await bot.send_message(ADMIN_CHAT_ID, message)
 
         elif action == 'deposit':
             message = f"💰 Новый депозит!\nUser ID: {user_id}\nAmount: {amount}"
-            await bot.send_message(ADMIN_ID, message)
+            await bot.send_message(ADMIN_CHAT_ID, message)
 
         # Отвечаем партнёрке, что всё ок
         return web.json_response({"status": "ok"})
