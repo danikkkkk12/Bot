@@ -17,8 +17,6 @@ WEBHOOK_HOST = 'https://bot-d92o.onrender.com'  # Замени на свой х�
 WEBHOOK_PATH = '/webhook'
 WEBHOOK_URL = f'{WEBHOOK_HOST}{WEBHOOK_PATH}'
 
-# ID чата для уведомлений (замени на свой)
-
 async def handle_webhook(request):
     """
     Обработчик входящих вебхуков от Telegram.
@@ -50,9 +48,13 @@ async def handle_postback(request):
         logger.info(f"Received postback data: {dict(data)}")
 
         # Пример обработки данных
-        action = data.get('action')
+        action = data.get('action', 'unknown')
         user_id = data.get('user_id')
-        amount = data.get('amount')
+        amount = data.get('amount', 0)
+
+        # Обработка строки 'null'
+        if user_id == 'null':
+            user_id = None
 
         # Логируем каждое поле
         logger.info(f"Action: {action}")
@@ -73,6 +75,12 @@ async def handle_postback(request):
     except Exception as e:
         logger.error(f"Ошибка при обработке постбека: {e}")
         return web.json_response({"status": "error", "message": str(e)}, status=500)
+
+async def handle_root(request):
+    """
+    Обработчик для корневого пути.
+    """
+    return web.Response(text="Server is running")
 
 async def on_startup(bot: Bot):
     """
@@ -114,6 +122,7 @@ async def main():
     app.router.add_post(WEBHOOK_PATH, handle_webhook)  # Для вебхуков Telegram
     app.router.add_get('/postback', handle_postback)  # Для постбеков от партнёрки
     app.router.add_post('/postback', handle_postback)  # Если партнёрка отправляет POST
+    app.router.add_get('/', handle_root)  # Обработчик для корневого пути
 
     # Запуск веб-сервера
     runner = web.AppRunner(app)
