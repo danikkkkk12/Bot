@@ -58,6 +58,10 @@ async def handle_postback(request):
         sub4 = parse_value(data.get('sub4'))
         amount = data.get('amount', 0)
 
+        # Если user_id равен None, устанавливаем значение по умолчанию
+        if user_id is None:
+            user_id = 0  # Или любое другое значение по умолчанию
+
         # Логируем каждое поле
         logger.info(f"Action: {action}")
         logger.info(f"User ID: {user_id}")
