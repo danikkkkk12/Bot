@@ -39,10 +39,7 @@ async def handle_postback(request):
         logger.info(f"Request method: {request.method}")
 
         # Получаем данные в зависимости от метода
-        if request.method == 'GET':
-            data = request.query  # Для GET-запросов
-        else:
-            data = await request.post()  # Для POST-запросов
+        data = request.query if request.method == 'GET' else await request.post()
 
         # Логируем все данные
         logger.info(f"Received postback data: {dict(data)}")
@@ -144,7 +141,7 @@ async def main():
     await site.start()
 
     logger.info(f"Бот запущен на порту {port}...")
-    
+
     # Бесконечный цикл для поддержания работы бота
     while True:
         await asyncio.sleep(3600)
